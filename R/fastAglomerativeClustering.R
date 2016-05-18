@@ -306,7 +306,7 @@ fastAglomerativeClustering <- function(clusters, weight, sigma){
 #' @param json of users. Required.
 main <- function(jsonClusters) {
 
-  stopifnot(length(jsonClusters) > 2)
+  #stopifnot(length(jsonClusters) > 2)
 
   clusters <- readData(jsonClusters)
 
