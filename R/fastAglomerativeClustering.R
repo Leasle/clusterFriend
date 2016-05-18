@@ -209,6 +209,7 @@ readData <- function(json) {
 
   library(jsonlite)
   tableJsonClusters <- as.matrix(fromJSON(json))
+  View(tableJsonClusters)
   colnames(tableJsonClusters) <- NULL
 
   clusters <- list()
@@ -304,6 +305,9 @@ fastAglomerativeClustering <- function(clusters, weight, sigma){
 #' @export
 #' @param json of users. Required.
 main <- function(jsonClusters) {
+
+  stopifnot(length(jsonClusters) > 2)
+
   clusters <- readData(jsonClusters)
 
   weight <- c(1, 1, 1, 1, 1)
