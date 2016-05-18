@@ -209,7 +209,7 @@ readData <- function(json) {
 
   library(jsonlite)
   tableJsonClusters <- as.matrix(fromJSON(json))
-  View(tableJsonClusters)
+  #View(tableJsonClusters)
   colnames(tableJsonClusters) <- NULL
 
   clusters <- list()
@@ -287,17 +287,17 @@ fastAglomerativeClustering <- function(clusters, weight, sigma){
       break()
     }
 
-    print("clusters ==============================================================")
-    print(clusters)
+    #print("clusters ==============================================================")
+    #print(clusters)
 
     distances <- distanceNewCluster(clusters, distances, weight)
 
     pairClustersSigma <- sigmaDistanseList(distances, sigma)
   }
 
-  print("max distance")
-  print(maxDistance)
-  print(clustersMaxDistance)
+  #print("max distance")
+  #print(maxDistance)
+  #print(clustersMaxDistance)
 
   return(clustersMaxDistance)
 }
@@ -317,7 +317,7 @@ main <- function(jsonClusters) {
 
   cluster <- fastAglomerativeClustering(clusters, weight, sigma)
 
-  print(cluster)
+  #print(cluster)
 
   result <- writeData(cluster)
 
