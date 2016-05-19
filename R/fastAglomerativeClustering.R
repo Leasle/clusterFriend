@@ -135,7 +135,6 @@ distanceUord <- function(x,y,w) {
   centerElementY <- centerElementCluster(y)
 
   distanceClusters <- xN*yN/sum(xN, yN)*distance(centerElementX, centerElementY, w)^2
-    #distance(centerElementX, centerElementY, w)
 
   return(distanceClusters)
 }
@@ -187,7 +186,7 @@ removeDistances <- function(distances, pairClusters) {
 }
 
 #Distance between new cluster and others
-distanceNewCluster <- function(clusters,distances,w) {
+distanceNewCluster <- function(clusters,distances,pairSigmaDistances,sigma,w) {
   colClusters <- length(clusters)
 
   if (colClusters > 1) {
@@ -195,21 +194,22 @@ distanceNewCluster <- function(clusters,distances,w) {
       distances[[length(distances)+1]] <- list(first=clusters[[index]],
                                                second=clusters[[colClusters]],
                                                distance=distanceUord(clusters[[index]], clusters[[colClusters]],w))
+
+      if (distances[[length(distances)]]$distance <= sigma) {
+
+        pairSigmaDistances[[length(pairSigmaDistances)+1]] <- distances[[length(distances)]]
+      }
     }
   }
 
-  return(distances)
+  return(list(distances, pairSigmaDistances))
 }
 
 #Read data of elements from JS
 readData <- function(json) {
-  #clusters <- list(list(c("id123", 1, 2, 3, 4, 9)), list(c("id124", 1, 2, 4, 5, 30)), list(c("id125", 1, 3, 2, 9, 31)),
-  #                 list(c("id126", 3, 6, 10, 8, 15)), list(c("id127", 4, 12, 30, 5, 28)), list(c("id128", 2, 10, 7, 3, 26)),
-  #                 list(c("id129", 2, 2, 5, 9, 10)), list(c("id130", 3, 5, 4, 9, 15)), list(c("id131", 4, 2, 4, 8, 12)), list(c("id132", 2, 10, 3, 4, 10)))
-
   library(jsonlite)
   tableJsonClusters <- as.matrix(fromJSON(json))
-  #View(tableJsonClusters)
+
   colnames(tableJsonClusters) <- NULL
 
   clusters <- list()
@@ -223,10 +223,6 @@ readData <- function(json) {
 
 #Write data of clusters to JSON
 writeData <- function(clusters) {
-  #clusters <- list(list(c("id123", 1, 2, 3, 4, 9)), list(c("id124", 1, 2, 4, 5, 30)), list(c("id125", 1, 3, 2, 9, 31)),
-  #                 list(c("id126", 3, 6, 10, 8, 15)), list(c("id127", 4, 12, 30, 5, 28)), list(c("id128", 2, 10, 7, 3, 26)),
-  #                 list(c("id129", 2, 2, 5, 9, 10)), list(c("id130", 3, 5, 4, 9, 15)), list(c("id131", 4, 2, 4, 8, 12)), list(c("id132", 2, 10, 3, 4, 10)))
-
   library(jsonlite)
 
   clustersMatrix <- list()
@@ -243,11 +239,7 @@ writeData <- function(clusters) {
 #Save mass of indexes that does not consider
 #Or rewrite mass of elements
 
-fastAglomerativeClustering <- function(clusters, weight, sigma){
-  iterNum <- 1
-
-  pSigma <- c()
-
+fastAglomerativeClustering <- function(clusters, weight, sigma) {
   distances <- distanceList(clusters, weight)
 
   pairClustersSigma <- sigmaDistanseList(distances, sigma)
@@ -267,9 +259,6 @@ fastAglomerativeClustering <- function(clusters, weight, sigma){
     minDistance <- pairClustersSigma[[indexPairMinDistance]]$distance
     pairClusters <- list(pairClustersSigma[[indexPairMinDistance]]$first, pairClustersSigma[[indexPairMinDistance]]$second)
 
-    #print("pairMinDistance")
-    #print(pairClustersSigma[[indexPairMinDistance]])
-
     indexPairMaxDistanceTemp <- which.max(lapply(distances, function(x) x$distance))
     maxDistanceTemp <- distances[[indexPairMaxDistanceTemp]]$distance
 
@@ -280,6 +269,7 @@ fastAglomerativeClustering <- function(clusters, weight, sigma){
 
     clusters <- removeClusters(clusters, pairClusters)
     distances <- removeDistances(distances, pairClusters)
+    pairClustersSigma <- removeDistances(pairClustersSigma, pairClusters)
 
     clusters <- addCluster(clusters, pairClusters)
 
@@ -287,17 +277,13 @@ fastAglomerativeClustering <- function(clusters, weight, sigma){
       break()
     }
 
-    #print("clusters ==============================================================")
-    #print(clusters)
+    results <- distanceNewCluster(clusters, distances, pairClustersSigma, sigma, weight)
 
-    distances <- distanceNewCluster(clusters, distances, weight)
+    distances <- results[[1]]
+    pairClustersSigma <- results[[2]]
 
-    pairClustersSigma <- sigmaDistanseList(distances, sigma)
+    rm(results)
   }
-
-  #print("max distance")
-  #print(maxDistance)
-  #print(clustersMaxDistance)
 
   return(clustersMaxDistance)
 }
@@ -310,14 +296,10 @@ main <- function(jsonClusters) {
 
   clusters <- readData(jsonClusters)
 
-  weight <- c(1, 1, 1, 1, 1)
-    #c(0.3, 0.1, 0.5, 0.05, 0.05)
-
+  weight <- rep(1, length(clusters))
   sigma <- 5
 
   cluster <- fastAglomerativeClustering(clusters, weight, sigma)
-
-  #print(cluster)
 
   result <- writeData(cluster)
 
