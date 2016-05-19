@@ -196,7 +196,6 @@ distanceNewCluster <- function(clusters,distances,pairSigmaDistances,sigma,w) {
                                                distance=distanceUord(clusters[[index]], clusters[[colClusters]],w))
 
       if (distances[[length(distances)]]$distance <= sigma) {
-
         pairSigmaDistances[[length(pairSigmaDistances)+1]] <- distances[[length(distances)]]
       }
     }
@@ -208,8 +207,10 @@ distanceNewCluster <- function(clusters,distances,pairSigmaDistances,sigma,w) {
 #Read data of elements from JS
 readData <- function(json) {
   library(jsonlite)
-  tableJsonClusters <- as.matrix(fromJSON(json))
 
+  stopifnot(nchar(json) >= 5)
+
+  tableJsonClusters <- as.matrix(fromJSON(json))
   colnames(tableJsonClusters) <- NULL
 
   clusters <- list()
@@ -239,7 +240,7 @@ writeData <- function(clusters) {
 #Save mass of indexes that does not consider
 #Or rewrite mass of elements
 
-fastAglomerativeClustering <- function(clusters, weight, sigma) {
+fastAglomerativeClustering <- function(clusters, weight, sigma, maxCountClusters, minCountClusters) {
   distances <- distanceList(clusters, weight)
 
   pairClustersSigma <- sigmaDistanseList(distances, sigma)
@@ -248,10 +249,13 @@ fastAglomerativeClustering <- function(clusters, weight, sigma) {
   maxDistance <- distances[[indexPairMaxDistance]]$distance
   clustersMaxDistance <- clusters
 
+  maxDistanceTemp <- maxDistance
+  maxDiffDistance <- maxDistanceTemp
+
   while (TRUE) {
 
     while (length(pairClustersSigma) == 0) {
-      sigma <- sum(sigma, 10)
+      sigma <- sum(sigma, 200)
       pairClustersSigma <- sigmaDistanseList(distances, sigma)
     }
 
@@ -259,12 +263,15 @@ fastAglomerativeClustering <- function(clusters, weight, sigma) {
     minDistance <- pairClustersSigma[[indexPairMinDistance]]$distance
     pairClusters <- list(pairClustersSigma[[indexPairMinDistance]]$first, pairClustersSigma[[indexPairMinDistance]]$second)
 
+    maxDistancePrev <- maxDistanceTemp
     indexPairMaxDistanceTemp <- which.max(lapply(distances, function(x) x$distance))
     maxDistanceTemp <- distances[[indexPairMaxDistanceTemp]]$distance
 
-    if (maxDistanceTemp > maxDistance) {
-      maxDistance <- maxDistanceTemp
-      clustersMaxDistance <- clusters
+    if (length(clusters) <= maxCountClusters && length(clusters) >= minCountClusters) {
+      if (abs(maxDistanceTemp - maxDistancePrev) >= maxDiffDistance) {
+        maxDiffDistance <- abs(maxDistanceTemp - maxDistancePrev)
+        clustersMaxDistance <- clusters
+      }
     }
 
     clusters <- removeClusters(clusters, pairClusters)
@@ -291,15 +298,16 @@ fastAglomerativeClustering <- function(clusters, weight, sigma) {
 #' @export
 #' @param json of users. Required.
 main <- function(jsonClusters) {
-
-  #stopifnot(length(jsonClusters) > 2)
-
   clusters <- readData(jsonClusters)
 
-  weight <- rep(1, length(clusters))
-  sigma <- 5
+  stopifnot(length(clusters) >= 10)
 
-  cluster <- fastAglomerativeClustering(clusters, weight, sigma)
+  weight <- rep(1, length(clusters))
+  sigma <- 100
+  maxCountClusters <- length(clusters) %/% 2
+  minCountClusters <- 2
+
+  cluster <- fastAglomerativeClustering(clusters, weight, sigma, maxCountClusters, minCountClusters)
 
   result <- writeData(cluster)
 
