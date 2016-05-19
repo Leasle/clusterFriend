@@ -231,7 +231,7 @@ writeData <- function(clusters) {
     clustersMatrix[[length(clustersMatrix)+1]] <- t(sapply(clusters[[index]], function(x) x))
   }
 
-  tableJsonClusters <- toJSON(clustersMatrix, pretty = TRUE)
+  tableJsonClusters <- toJSON(clustersMatrix)
 
   tableJsonClusters
 }
