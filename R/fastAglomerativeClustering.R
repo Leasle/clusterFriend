@@ -303,7 +303,7 @@ main <- function(jsonClusters) {
 
   result <- writeData(cluster)
 
-  return(list(result))
+  return(result)
 }
 
 #' @export
