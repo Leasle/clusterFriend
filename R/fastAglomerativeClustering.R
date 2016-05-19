@@ -303,7 +303,7 @@ main <- function(jsonClusters) {
   stopifnot(length(clusters) >= 10)
 
   weight <- rep(1, length(clusters))
-  sigma <- 100
+  sigma <- 300
   maxCountClusters <- length(clusters) %/% 2
   minCountClusters <- 2
 
@@ -312,15 +312,4 @@ main <- function(jsonClusters) {
   result <- writeData(cluster)
 
   return(result)
-}
-
-#' @export
-hello <- function() {
-  library(jsonlite)
-
-  hello <- list("hello")
-
-  helloJson <- toJSON(hello, pretty = TRUE)
-
-  return(list(helloJson))
 }
