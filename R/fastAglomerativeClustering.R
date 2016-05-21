@@ -2,12 +2,17 @@
 #clusters <- list(list(c("id123", 1, 2, 3)), list(c("id124", 1, 2, 4)))
 #distances <- list(list(c("id123", 1, 2, 3)), list(c("id124", 1, 2, 4)), 23)
 
+#normalize of coordinates
+normalizeData <- function(vectors) {
+  maxValues <- apply(vectors, 2, function(col) max(abs(col),1))
+  normalizedVectors <- t(apply(vectors, 1, function(row) row/maxValues))
 
+  normalizedVectors
+}
 
 # Calculate distanse between two elements
 distance <- function(x,y,w) {
-  squareSumm <- 0
-  squareSumm <- sum(squareSumm, w*(x-y)^2);
+  squareSumm <- sum(0, w*(x-y)^2);
 
     return(sqrt(squareSumm))
 }
@@ -212,6 +217,8 @@ readData <- function(json) {
 
   tableJsonClusters <- as.matrix(fromJSON(json))
   colnames(tableJsonClusters) <- NULL
+  tableJsonClusters[,2:ncol(tableJsonClusters)] <- normalizeData(tableJsonClusters[,2:ncol(tableJsonClusters)])
+  View(tableJsonClusters)
 
   clusters <- list()
 
@@ -255,7 +262,7 @@ fastAglomerativeClustering <- function(clusters, weight, sigma, maxCountClusters
   while (TRUE) {
 
     while (length(pairClustersSigma) == 0) {
-      sigma <- sum(sigma, 200)
+      sigma <- sum(sigma, 0.05)
       pairClustersSigma <- sigmaDistanseList(distances, sigma)
     }
 
@@ -303,7 +310,7 @@ main <- function(jsonClusters) {
   stopifnot(length(clusters) >= 10)
 
   weight <- rep(1, length(clusters))
-  sigma <- 300
+  sigma <- 0.01
   maxCountClusters <- length(clusters) %/% 2
   minCountClusters <- 2
 

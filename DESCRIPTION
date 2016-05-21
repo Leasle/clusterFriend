@@ -1,9 +1,10 @@
-Package: clusterFriend
+Package: clusterFriends
 Type: Package
-Title: What the Package Does (Title Case)
+Title: cluster friends from VK
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Date: 2016-05-20
+Author: Sergey Zosimov, Nikita Nikolskiy
+Maintainer: Sergey <sergeeys96@gmail.com>
+Description: You can perform cluster analysis to your friends and other users to know people that have the same interests.
 License: Apache2
 LazyData: TRUE
